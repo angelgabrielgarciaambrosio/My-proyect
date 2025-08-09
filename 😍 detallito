@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Para Ti ❤️</title>
+<style>
+  body {
+    margin: 0;
+    background: #000;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+    color: white;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  #mensaje {
+    position: absolute;
+    bottom: 50px;
+    text-align: center;
+    font-size: 1.3em;
+    max-width: 90%;
+    opacity: 0;
+    animation: fadeIn 1s forwards;
+  }
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+<div id="mensaje"></div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let width, height;
+let particles = [];
+let mouse = { x: null, y: null, radius: 80 };
+let frases = [
+  "No necesito un día especial para pensar en ti 💖",
+  "Eres mi casualidad más bonita ✨",
+  "Tú haces que cualquier día sea especial 🌹",
+  "Mi lugar favorito siempre será contigo ❤️"
+];
+let fraseIndex = 0;
+
+function resizeCanvas() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+canvas.addEventListener('mousemove', e => {
+  mouse.x = e.x;
+  mouse.y = e.y;
+});
+canvas.addEventListener('touchmove', e => {
+  mouse.x = e.touches[0].clientX;
+  mouse.y = e.touches[0].clientY;
+});
+canvas.addEventListener('mouseleave', () => {
+  mouse.x = null;
+  mouse.y = null;
+});
+canvas.addEventListener('touchend', () => {
+  mouse.x = null;
+  mouse.y = null;
+});
+
+class Particle {
+  constructor(x, y) {
+    this.x = this.baseX = x;
+    this.y = this.baseY = y;
+    this.size = 2;
+    this.density = Math.random() * 40 + 5;
+  }
+  draw() {
+    ctx.fillStyle = "#ff3366";
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.fill();
+  }
+  update() {
+    let dx = mouse.x - this.x;
+    let dy = mouse.y - this.y;
+    let distance = Math.sqrt(dx * dx + dy * dy);
+    let forceDirectionX = dx / distance;
+    let forceDirectionY = dy / distance;
+    let maxDistance = mouse.radius;
+    let force = (maxDistance - distance) / maxDistance;
+
+    if (distance < mouse.radius) {
+      this.x -= forceDirectionX * force * this.density;
+      this.y -= forceDirectionY * force * this.density;
+    } else {
+      this.x += (this.baseX - this.x) * 0.05;
+      this.y += (this.baseY - this.y) * 0.05;
+    }
+  }
+}
+
+function init() {
+  particles = [];
+  ctx.font = "bold 200px Arial";
+  ctx.fillText("❤️", width / 2 - 100, height / 2 + 70);
+  const textData = ctx.getImageData(0, 0, width, height);
+  for (let y = 0; y < textData.height; y += 6) {
+    for (let x = 0; x < textData.width; x += 6) {
+      let alpha = textData.data[(y * 4 * textData.width) + (x * 4) + 3];
+      if (alpha > 128) {
+        particles.push(new Particle(x, y));
+      }
+    }
+  }
+}
+function animate() {
+  ctx.clearRect(0, 0, width, height);
+  particles.forEach(p => {
+    p.draw();
+    p.update();
+  });
+  requestAnimationFrame(animate);
+}
+
+function cambiarFrase() {
+  const mensaje = document.getElementById("mensaje");
+  mensaje.style.opacity = 0;
+  setTimeout(() => {
+    mensaje.textContent = frases[fraseIndex];
+    mensaje.style.opacity = 1;
+    fraseIndex = (fraseIndex + 1) % frases.length;
+  }, 500);
+}
+setInterval(cambiarFrase, 3000);
+cambiarFrase();
+
+init();
+animate();
+</script>
+</body>
+</html>
